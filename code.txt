@@ -1,0 +1,36 @@
+import telebot
+import requests
+from telebot import types
+
+bot = telebot.TeleBot('6726476661:AAFhzoUBaDaLicBpTCtXjO3rf5s4zhT9b1Y')
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn = types.KeyboardButton("Випадкова фотографія")
+    markup.add(btn)
+
+    bot.send_message(message.chat.id, "Привіт. Натисни на <Випадкова фотографія>, щоб отримати фото собаки", reply_markup=markup)
+
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    if message.text == "Випадкова фотографія":
+        dog_picture_url = get_dog_picture()
+        if dog_picture_url:
+            bot.send_photo(message.chat.id, dog_picture_url)
+        else:
+            bot.send_message(message.chat.id, "Не правильний запрос, спробуйте: Випадкова фотографія")
+
+def get_dog_picture():
+    try:
+        response = requests.get("https://dog.ceo/api/breeds/image/random")
+        data = response.json()
+        if response.status_code == 200 and data['status'] == 'success':
+            return data['message']
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching dog picture: {e}")
+        return None
+
+bot.polling(none_stop=True, interval=0)
